@@ -277,16 +277,8 @@ public func verifySnapshot<Value, Format>(
         return nil
       }
       
-      guard !recording else {
+      if recording {
         try snapshotting.diffing.toData(diffable).write(to: snapshotFileUrl)
-        return """
-            Record mode is on. Differences were found vs the previously-recorded snapshot.
-            Turn record mode off and re-run "\(testName)" to test against the newly-recorded snapshot.
-
-            open "\(snapshotFileUrl.path)"
-
-            Recorded snapshot: …
-            """
       }
 
       let artifactsUrl = URL(
@@ -295,7 +287,7 @@ public func verifySnapshot<Value, Format>(
       let artifactsSubUrl = artifactsUrl.appendingPathComponent(fileName)
       try fileManager.createDirectory(at: artifactsSubUrl, withIntermediateDirectories: true)
       let failedSnapshotFileUrl = artifactsSubUrl.appendingPathComponent(snapshotFileUrl.lastPathComponent)
-      try snapshotting.diffing.toData(diffable).write(to: failedSnapshotFileUrl)
+      try snapshotting.diffing.toData(recording ? reference : diffable).write(to: failedSnapshotFileUrl)
 
       if !attachments.isEmpty {
         #if !os(Linux) && !os(Windows)
